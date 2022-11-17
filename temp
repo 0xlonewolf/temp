@@ -1,0 +1,139 @@
+#Install Java#
+read -p "Enter username:  " username
+read -p "Enter Machine IP:  " machineIP
+sudo apt update
+sudo apt-get install openjdk-8-jdk -y
+
+#Add Elastic Repo#
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee –a /etc/apt/sources.list.d/elastic-7.x.list
+
+#Install apt-transport-https package#
+sudo apt-get install apt-transport-https unzip
+sudo apt-get update
+
+#Install Elasticsearch
+sudo apt-get install elasticsearch -y
+sudo systemctl enable elasticsearch
+
+#ask Elasticsearch cluster name#
+read -p "Enter cluster name: " cluster_name
+
+# Elasticsearch configuration#
+#cat > /usr/share/elasticsearch/instances.yml
+sudo cat >> /usr/share/elasticsearch/instances.yml <<EOF
+instances:
+    - name: "elasticsearch"
+      ip:
+        - "$machineIP"
+    - name: "kibana"
+      ip:
+        - "$machineIP"
+EOF
+
+sudo echo "cluster.name: "$cluster_name"" >> /etc/elasticsearch/elasticsearch.yml
+sudo echo "network.host: "$machineIP"" >> /etc/elasticsearch/elasticsearch.yml
+sudo cat >> /etc/elasticsearch/elasticsearch.yml <<EOF
+http.port: 9200
+discovery.type: single-node
+xpack.security.enabled: true
+xpack.security.authc.api_key.enabled: true
+
+#xpack.security.transport.ssl#
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.key: /etc/elasticsearch/certs/elasticsearch.key
+xpack.security.transport.ssl.certificate: /etc/elasticsearch/certs/elasticsearch.crt
+xpack.security.transport.ssl.certificate_authorities: ["/etc/elasticsearch/certs/ca/ca.crt"]
+
+#xpack.security.http.ssl#
+
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.verification_mode: certificate
+xpack.security.http.ssl.key: /etc/elasticsearch/certs/elasticsearch.key
+xpack.security.http.ssl.certificate: /etc/elasticsearch/certs/elasticsearch.crt
+xpack.security.http.ssl.certificate_authorities: ["/etc/elasticsearch/certs/ca/ca.crt"]
+
+EOF
+
+cat >> /etc/elasticsearch/jvm.options <<EOF
+-Xms2g
+-Xmx2g
+EOF
+
+#create certificates#
+cd /usr/share/elasticsearch/
+sudo mkdir -p /usr/share/elasticsearch/ca/
+sudo /usr/share/elasticsearch/bin/elasticsearch-certutil ca --pem --out ./elastic-stack-ca.zip
+sudo unzip /usr/share/elasticsearch/elastic-stack-ca.zip
+sudo /usr/share/elasticsearch/bin/elasticsearch-certutil cert --ca-cert ca/ca.crt --ca-key ca/ca.key --pem --in instances.yml  --out certs.zip
+
+#unzip certs#
+sudo unzip /usr/share/elasticsearch/certs.zip
+sudo mkdir -p ./certs/
+sudo mv /usr/share/elasticsearch/elasticsearch/* ./certs/
+sudo mv /usr/share/elasticsearch/kibana/* ./certs/
+sudo mkdir -p /etc/kibana/certs/ca/
+sudo mkdir -p /etc/elasticsearch/certs/ca/
+
+#Copy certificates#
+sudo cp /usr/share/elasticsearch/ca/ca.* /etc/elasticsearch/certs/ca/
+sudo cp /usr/share/elasticsearch/ca/ca.* /etc/kibana/certs/ca/
+sudo cp /usr/share/elasticsearch/certs/elasticsearch.* /etc/elasticsearch/certs/
+sudo cp /usr/share/elasticsearch/certs/kibana.* /etc/kibana/certs/
+sudo cp /usr/share/elasticsearch/ca/ca.crt /
+sudo rm -r /usr/share/elasticsearch/elasticsearch/ /usr/share/elasticsearch/kibana/
+
+#Change ownership#
+cd /usr/share/
+sudo chown -R elasticsearch:elasticsearch elasticsearch/
+sudo chown -R elasticsearch:elasticsearch /etc/elasticsearch/
+cd /usr/share/elasticsearch/
+sudo chown -R elasticsearch:elasticsearch certs/
+sudo chown -R elasticsearch:elasticsearch ca/
+
+#Elasticsearch service#
+sudo systemctl start elasticsearch
+sudo systemctl status elasticsearch
+
+#Create passwords
+cd /usr/share/elasticsearch/
+sudo touch /home/$username/passwords.txt
+read -p "Press y to create password" password
+echo $password
+sudo ./bin/elasticsearch-setup-passwords auto 1> /home/$username/passwords.txt
+kibana_password = `cat /home/$username/passwords.txt | grep "PASSWORD kibana_system" | cut -d '=' -f 2`
+
+
+#Install Kibana
+sudo apt-get install kibana -y
+
+cat >> /etc/kibana/kibana.yml <<EOF
+server.host: $machineIP
+server.port: 5601
+server.publicBaseUrl: https://$machineIP
+elasticsearch.hosts: ["https://$machineIP:9200"]
+
+elasticsearch.username: "kibana_system"
+elasticsearch.password: "$kibana_password"
+
+server.ssl.enabled: true
+server.ssl.certificate: "/etc/kibana/certs/kibana.crt"
+server.ssl.key: "/etc/kibana/certs/kibana.key"
+
+
+xpack.encryptedSavedObjects.encryptionKey: 3c7cd13abcc677fff24c49755a3883ce
+xpack.reporting.encryptionKey: a74e79eb9b8b3ac83acc4ae6091b1689
+xpack.security.encryptionKey: 18856156b26c268d3800a60961e10817
+xpack.security.session.idleTimeout: "30m"
+
+elasticsearch.ssl.certificateAuthorities: [ "/etc/kibana/certs/ca/ca.crt" ]
+elasticsearch.ssl.certificate: "/etc/kibana/certs/kibana.crt"
+elasticsearch.ssl.key: "/etc/kibana/certs/kibana.key"
+
+EOF
+
+#Kibana service#
+sudo systemctl enable kibana
+sudo systemctl start kibana
+sudo systemctl status kibana
