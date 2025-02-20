@@ -1,6 +1,3 @@
-#!/bin/bash
-# Script to set up Elasticsearch and Cortex with 0xLoneWolf branding
-
 clear
 
 echo -e "\e[38;5;208m"  # Set text color to Saffron (Orange)
