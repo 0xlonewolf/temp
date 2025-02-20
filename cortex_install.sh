@@ -1,0 +1,151 @@
+#!/bin/bash
+# Script to set up Elasticsearch and Cortex with 0xLoneWolf branding
+
+clear
+
+echo -e "\e[38;5;208m"  # Set text color to Saffron (Orange)
+cat << "EOF"
+ .d8888b.           888                                 888       888          888  .d888 
+d88P  Y88b          888                                 888   o   888          888 d88P"  
+888    888          888                                 888  d8b  888          888 888    
+EOF
+
+echo -e "\e[97m"  # Set text color to White
+cat << "EOF"
+888    888 888  888 888       .d88b.  88888b.   .d88b.  888 d888b 888  .d88b.  888 888888 
+888    888 `Y8bd8P' 888      d88""88b 888 "88b d8P  Y8b 888d88888b888 d88""88b 888 888    
+EOF
+
+echo -e "\e[32m"  # Set text color to Green
+cat << "EOF"
+888    888   X88K   888      888  888 888  888 88888888 88888P Y88888 888  888 888 888    
+Y88b  d88P .d8""8b. 888      Y88..88P 888  888 Y8b.     8888P   Y8888 Y88..88P 888 888    
+ "Y8888P"  888  888 88888888  "Y88P"  888  888  "Y8888  888P     Y888  "Y88P"  888 888    
+EOF
+
+echo -e "\e[0m"  # Reset text color
+echo "==========================================================================="
+echo "      0xLoneWolf Setup Script for Elasticsearch and Cortex installation 🚀"
+echo "==========================================================================="
+echo ""
+
+# ----------------------------
+# Step 1: Update System and Install Required Packages
+# ----------------------------
+echo "[*] Updating system and installing necessary packages..."
+sudo apt update && sudo apt upgrade -y
+
+# Install required utilities
+sudo apt install -y wget gnupg apt-transport-https git ca-certificates ca-certificates-java curl software-properties-common python3-pip lsb-release
+
+# Install Java 11 (required for Elasticsearch and Cortex)
+echo "[*] Installing OpenJDK 11..."
+sudo apt install -y openjdk-11-jre-headless
+
+# Set JAVA_HOME environment variable for Java applications
+echo "[*] Configuring Java environment..."
+echo 'JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"' | sudo tee -a /etc/environment
+export JAVA_HOME="/usr/lib/jvm/java-11-openjdk-amd64"
+
+# ----------------------------
+# Step 2: Add Elasticsearch Repository and Install
+# ----------------------------
+echo "[*] Adding Elasticsearch repository..."
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+
+echo "deb https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
+
+# ----------------------------
+# Step 3: Add Cortex Repository (TheHive Project)
+# ----------------------------
+echo "[*] Adding Cortex repository..."
+wget -qO- https://raw.githubusercontent.com/TheHive-Project/Cortex/master/PGP-PUBLIC-KEY | sudo tee /usr/share/keyrings/thehive-project.gpg > /dev/null
+
+echo "deb [arch=all] https://deb.thehive-project.org release main" | sudo tee /etc/apt/sources.list.d/thehive-project.list
+
+# ----------------------------
+# Step 4: Install Elasticsearch
+# ----------------------------
+echo "[*] Updating package lists and installing Elasticsearch..."
+sudo apt update
+sudo apt install -y elasticsearch
+
+echo "[*] Enabling and starting Elasticsearch service..."
+sudo systemctl enable elasticsearch
+sudo systemctl start elasticsearch
+sudo systemctl status elasticsearch --no-pager
+
+# ----------------------------
+# Step 5: Configure Elasticsearch
+# ----------------------------
+echo "[*] Configuring Elasticsearch settings..."
+sudo cat >> /etc/elasticsearch/elasticsearch.yml << EOF
+http.host: 10.61.109.6
+cluster.name: hive
+thread_pool.search.queue_size: 100000
+xpack.security.enabled: false
+script.allowed_types: "inline,stored"
+EOF
+
+echo "[*] Optimizing Elasticsearch JVM settings..."
+sudo cat >> /etc/elasticsearch/jvm.options << EOF
+-Dlog4j2.formatMsgNoLookups=true
+-Xms4g
+-Xmx4g
+EOF
+
+echo "[*] Restarting Elasticsearch to apply changes..."
+sudo systemctl restart elasticsearch
+
+echo "Checking if Elasticsearch is running"
+curl -X GET 'http://10.61.109.6:9200/_cluster/health?pretty'
+
+# ----------------------------
+# Step 6: Install Cortex
+# ----------------------------
+echo "[*] Installing Cortex..."
+sudo apt install -y cortex
+
+# ----------------------------
+# Step 7: Configure Cortex
+# ----------------------------
+echo "[*] Configuring Cortex settings..."
+
+# Generate a random secret key for Cortex's HTTP server
+sudo cat > /etc/cortex/secret.conf << _EOF_
+play.http.secret.key="$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
+_EOF_
+
+# Include secret configuration in Cortex application settings
+sudo cat > /etc/cortex/application.conf << _EOF_
+include "/etc/cortex/secret.conf"
+_EOF_
+
+# ----------------------------
+# Step 8: Install Additional Dependencies for Cortex Analyzers
+# ----------------------------
+echo "[*] Installing additional dependencies for Cortex analyzers..."
+sudo apt install -y python3-pip python3-dev ssdeep libfuzzy-dev libfuzzy2 libimage-exiftool-perl libmagic1 build-essential git libssl-dev
+
+echo "[*] Upgrading pip and setuptools..."
+sudo pip3 install -U pip setuptools
+
+# ----------------------------
+# Step 9: Clone and Install Cortex Analyzers
+# ----------------------------
+echo "[*] Cloning Cortex analyzers repository..."
+cd /opt
+git clone https://github.com/TheHive-Project/Cortex-Analyzers
+sudo chown -R cortex:cortex /opt/Cortex-Analyzers
+
+echo "[*] Installing dependencies for Cortex analyzers..."
+for I in $(find /opt/Cortex-Analyzers -name 'requirements.txt'); do
+    sudo -H pip3 install -r "$I" || true
+done
+
+echo -e "\e[32m==========================================="
+echo -e "      Installation Completed! 🎉"
+echo -e "===========================================\e[0m"
+
+echo "[*] Elasticsearch and Cortex setup is now complete!"
+echo "[*] Verify configurations before using in production."
