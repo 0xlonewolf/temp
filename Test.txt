@@ -1,16 +1,7 @@
-# Create the file
 New-Item -Path "Morohub-ADPA.ps1" -ItemType File -Force
-
-# Add header and metadata
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Morohub Active Directory Posture Assessment & Remediation Tool" -Encoding UTF8
-Add-Content -Path "Morohub-ADPA.ps1" -Value "# Version: 1.0.0" -Encoding UTF8
-Add-Content -Path "Morohub-ADPA.ps1" -Value "# Build: 202412010000" -Encoding UTF8
-Add-Content -Path "Morohub-ADPA.ps1" -Value "# Author: Lokesh Singh" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Description: Comprehensive AD security assessment and attack path detection tool" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Requirements: PowerShell 5.1+, ActiveDirectory, GroupPolicy modules" -Encoding UTF8
-Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add comment-based help
 Add-Content -Path "Morohub-ADPA.ps1" -Value "<#" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value ".SYNOPSIS" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    Morohub Active Directory Posture Assessment & Remediation Tool" -Encoding UTF8
@@ -76,8 +67,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value ".LINK" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    https://morohub.com/security-tools" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "#>" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add parameter block
 Add-Content -Path "Morohub-ADPA.ps1" -Value "[CmdletBinding()]" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "param(" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$QuickScan," -Encoding UTF8
@@ -94,20 +83,14 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$VerboseLogging," -Enc
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    [string]`$OutputDirectory = `"Morohub-ADPA-Output`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value ")" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add error handling
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Set error handling" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "`$OldErrorState = `$ErrorActionPreference" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "`$ErrorActionPreference = `"Continue`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add initialization section
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# =============================================================================" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# COMPLEX INITIALIZATION LOGGING & ENVIRONMENT VALIDATION" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# =============================================================================" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add initialization logging system
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Initialize comprehensive logging system" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:InitializationLog = @{" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    StartTime = Get-Date" -Encoding UTF8
@@ -124,8 +107,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "    ScriptVersion = `"1.0.0`"" -Enc
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    BuildDate = `"202412010000`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add enhanced initialization logging function
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Enhanced initialization logging function" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "function Write-InitializationLog {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
@@ -167,8 +148,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "        Level = `$Level" -Encoding 
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add environment validation function
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Environment validation function" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "function Test-EnvironmentCompatibility {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
@@ -248,8 +227,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    return `$compatibilityResults" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add initialization calls
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Initialize comprehensive logging" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Starting Morohub ADPA initialization`" -Level `"Info`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Script version`" -Details `$script:InitializationLog.ScriptVersion -Level `"Info`"" -Encoding UTF8
@@ -263,13 +240,9 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component 
 Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Working directory`" -Details `$script:InitializationLog.WorkingDirectory -Level `"Info`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Script path`" -Details `$script:InitializationLog.ScriptPath -Level `"Info`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add environment compatibility check
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Run environment compatibility check" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:EnvironmentCompatibility = Test-EnvironmentCompatibility" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add compatibility results summary
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Log compatibility results summary" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "`$successCount = (`$script:EnvironmentCompatibility.PowerShellVersion -eq `$true) + " -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "                (`$script:EnvironmentCompatibility.ExecutionPolicy -eq `$true) + " -Encoding UTF8
@@ -288,8 +261,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Initialization logging system ready`" -Level `"Success`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add variable initialization
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Initialize variables" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:OutputDir = `$OutputDirectory" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:LogFile = `"Morohub-ADPA.log`"" -Encoding UTF8
@@ -311,8 +282,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "    StartTime = Get-Date" -Encoding
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    CheckTimes = @{}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add execution mode determination
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Determine execution mode" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "if (`$QuickScan) {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$script:ExecutionMode = `"QuickScan`"" -Encoding UTF8
@@ -322,15 +291,11 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "} else {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$script:ExecutionMode = `"Standard`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add output directory creation
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Create output directory" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "if (-not (Test-Path `$script:OutputDir)) {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    New-Item -Path `$script:OutputDir -ItemType Directory -Force | Out-Null" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add enhanced logging function
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Enhanced logging function" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "function Write-MorohubLog {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
@@ -361,8 +326,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "        Add-Content -Path (Join-Pat
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add progress tracking function
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Progress tracking function" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "function Log-MorohubProgress {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
@@ -388,8 +351,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Skipped`" { `$script:Secu
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add enhanced group membership enumeration
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Enhanced group membership enumeration" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "function Get-GroupMembers {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
@@ -437,8 +398,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "        return @()" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add DCSync rights detection
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# DCSync rights detection" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "function Get-DCSyncRights {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
@@ -495,8 +454,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "        return @()" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add dangerous ACL detection
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Dangerous ACL detection" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "function Get-DangerousACLs {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
@@ -556,8 +513,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "        return @()" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
-
-# Add main script execution
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Main script execution" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "try {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-MorohubLog -Message `"Starting Morohub ADPA assessment`" -Level `"Info`"" -Encoding UTF8
@@ -572,8 +527,6 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "} catch {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-MorohubLog -Message `"Critical error during assessment: `$(`$_.Exception.Message)`" -Level `"Error`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-Host `"Critical error occurred during assessment. Check error logs for details.`" -ForegroundColor Red" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
-
-# Verify the file was created successfully
 Write-Host "Morohub-ADPA.ps1 file created successfully!" -ForegroundColor Green
 Write-Host "File size: $((Get-Item 'Morohub-ADPA.ps1').Length) bytes" -ForegroundColor Cyan
 Write-Host "You can now run the script with: .\Morohub-ADPA.ps1 -QuickScan" -ForegroundColor Yellow
