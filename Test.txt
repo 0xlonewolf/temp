@@ -1,738 +1,579 @@
-$scriptContent = @'
-# Morohub Active Directory Posture Assessment & Remediation Tool
-# Description: Comprehensive AD security assessment and attack path detection tool
-# Requirements: PowerShell 5.1+, ActiveDirectory, GroupPolicy modules
+# Create the file
+New-Item -Path "Morohub-ADPA.ps1" -ItemType File -Force
 
-<#
-.SYNOPSIS
-    Morohub Active Directory Posture Assessment & Remediation Tool
-    
-.DESCRIPTION
-    Comprehensive Active Directory security assessment tool that detects attack paths,
-    persistence mechanisms, and security misconfigurations. Provides detailed reporting
-    and risk assessment with CIS compliance mapping.
-    
-.PARAMETER QuickScan
-    Run quick security scan (basic checks only)
-    
-.PARAMETER FullAssessment
-    Run comprehensive security assessment (all checks)
-    
-.PARAMETER CheckTrusts
-    Include trust relationship analysis
-    
-.PARAMETER CheckPasswords
-    Include password policy and account analysis
-    
-.PARAMETER CheckPrivilegedGroups
-    Include privileged group membership analysis
-    
-.PARAMETER CheckGPOs
-    Include Group Policy Object analysis
-    
-.PARAMETER CheckCertificates
-    Include certificate template analysis
-    
-.PARAMETER ParallelExecution
-    Enable parallel execution for performance
-    
-.PARAMETER OutputFormat
-    Output format: CSV, HTML, Both, or BloodHound
-    
-.PARAMETER VerboseLogging
-    Enable verbose logging
-    
-.PARAMETER OutputDirectory
-    Custom output directory path (default: Morohub-ADPA-Output)
-    
-.EXAMPLE
-    .\Morohub-ADPA.ps1 -QuickScan
-    
-.EXAMPLE
-    .\Morohub-ADPA.ps1 -FullAssessment -OutputFormat Both
-    
-.EXAMPLE
-    .\Morohub-ADPA.ps1 -CheckTrusts -CheckPasswords -OutputFormat HTML
-    
-.EXAMPLE
-    .\Morohub-ADPA.ps1 -FullAssessment -OutputDirectory "C:\Security\AD-Assessment-Results"
-    
-.NOTES
-    This tool requires:
-    - PowerShell 5.1 or higher
-    - Active Directory module
-    - Group Policy module
-    - Domain user with appropriate permissions
-    
-.LINK
-    https://morohub.com/security-tools
-#>
+# Add header and metadata
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Morohub Active Directory Posture Assessment & Remediation Tool" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Version: 1.0.0" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Build: 202412010000" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Author: Lokesh Singh" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Description: Comprehensive AD security assessment and attack path detection tool" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Requirements: PowerShell 5.1+, ActiveDirectory, GroupPolicy modules" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-[CmdletBinding()]
-param(
-    [switch]$QuickScan,
-    [switch]$FullAssessment,
-    [switch]$CheckTrusts,
-    [switch]$CheckPasswords,
-    [switch]$CheckPrivilegedGroups,
-    [switch]$CheckGPOs,
-    [switch]$CheckCertificates,
-    [switch]$ParallelExecution,
-    [ValidateSet("CSV", "HTML", "Both", "BloodHound")]
-    [string]$OutputFormat = "Both",
-    [switch]$VerboseLogging,
-    [string]$OutputDirectory = "Morohub-ADPA-Output"
-)
+# Add comment-based help
+Add-Content -Path "Morohub-ADPA.ps1" -Value "<#" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".SYNOPSIS" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Morohub Active Directory Posture Assessment & Remediation Tool" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".DESCRIPTION" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Comprehensive Active Directory security assessment tool that detects attack paths," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    persistence mechanisms, and security misconfigurations. Provides detailed reporting" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    and risk assessment with CIS compliance mapping." -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER QuickScan" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Run quick security scan (basic checks only)" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER FullAssessment" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Run comprehensive security assessment (all checks)" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER CheckTrusts" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Include trust relationship analysis" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER CheckPasswords" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Include password policy and account analysis" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER CheckPrivilegedGroups" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Include privileged group membership analysis" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER CheckGPOs" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Include Group Policy Object analysis" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER CheckCertificates" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Include certificate template analysis" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER ParallelExecution" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Enable parallel execution for performance" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER OutputFormat" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Output format: CSV, HTML, Both, or BloodHound" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER VerboseLogging" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Enable verbose logging" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".PARAMETER OutputDirectory" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Custom output directory path (default: Morohub-ADPA-Output)" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".EXAMPLE" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    .\Morohub-ADPA.ps1 -QuickScan" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".EXAMPLE" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    .\Morohub-ADPA.ps1 -FullAssessment -OutputFormat Both" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".EXAMPLE" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    .\Morohub-ADPA.ps1 -CheckTrusts -CheckPasswords -OutputFormat HTML" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".EXAMPLE" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    .\Morohub-ADPA.ps1 -FullAssessment -OutputDirectory `"C:\Security\AD-Assessment-Results`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".NOTES" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    This tool requires:" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    - PowerShell 5.1 or higher" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    - Active Directory module" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    - Group Policy module" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    - Domain user with appropriate permissions" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ".LINK" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    https://morohub.com/security-tools" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "#>" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Set error handling
-$OldErrorState = $ErrorActionPreference
-$ErrorActionPreference = "Continue"
+# Add parameter block
+Add-Content -Path "Morohub-ADPA.ps1" -Value "[CmdletBinding()]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "param(" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$QuickScan," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$FullAssessment," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$CheckTrusts," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$CheckPasswords," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$CheckPrivilegedGroups," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$CheckGPOs," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$CheckCertificates," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$ParallelExecution," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [ValidateSet(`"CSV`", `"HTML`", `"Both`", `"BloodHound`")]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [string]`$OutputFormat = `"Both`"," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [switch]`$VerboseLogging," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [string]`$OutputDirectory = `"Morohub-ADPA-Output`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value ")" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# =============================================================================
-# COMPLEX INITIALIZATION LOGGING & ENVIRONMENT VALIDATION
-# =============================================================================
+# Add error handling
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Set error handling" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$OldErrorState = `$ErrorActionPreference" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$ErrorActionPreference = `"Continue`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Initialize comprehensive logging system
-$script:InitializationLog = @{
-    StartTime = Get-Date
-    PowerShellVersion = $PSVersionTable.PSVersion.ToString()
-    ExecutionPolicy = Get-ExecutionPolicy
-    CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
-    ComputerName = $env:COMPUTERNAME
-    DomainName = $env:USERDOMAIN
-    OSVersion = (Get-WmiObject -Class Win32_OperatingSystem).Caption
-    Architecture = $env:PROCESSOR_ARCHITECTURE
-    WorkingDirectory = Get-Location
-    ScriptPath = $MyInvocation.MyCommand.Path
-    ScriptVersion = "1.0.0"
-    BuildDate = "202412010000"
-}
+# Add initialization section
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# =============================================================================" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# COMPLEX INITIALIZATION LOGGING & ENVIRONMENT VALIDATION" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# =============================================================================" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Enhanced initialization logging function
-function Write-InitializationLog {
-    [CmdletBinding()]
-    param(
-        [string]$Component,
-        [string]$Status,
-        [string]$Details = "",
-        [string]$Level = "Info"
-    )
-    
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss.fff"
-    $logEntry = "[$timestamp] [INIT] [$Component] $Status"
-    if ($Details) {
-        $logEntry += " - $Details"
-    }
-    
-    # Console output with initialization-specific formatting
-    $color = switch ($Level) {
-        "Info" { "White" }
-        "Warning" { "Yellow" }
-        "Error" { "Red" }
-        "Success" { "Green" }
-        "Security" { "Magenta" }
-        default { "Cyan" }
-    }
-    
-    Write-Host $logEntry -ForegroundColor $color
-    
-    # Store in initialization log for later output
-    if (-not $script:InitializationLog.ContainsKey("LogEntries")) {
-        $script:InitializationLog.LogEntries = @()
-    }
-    $script:InitializationLog.LogEntries += @{
-        Timestamp = $timestamp
-        Component = $Component
-        Status = $Status
-        Details = $Details
-        Level = $Level
-    }
-}
+# Add initialization logging system
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Initialize comprehensive logging system" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:InitializationLog = @{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    StartTime = Get-Date" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    PowerShellVersion = `$PSVersionTable.PSVersion.ToString()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    ExecutionPolicy = Get-ExecutionPolicy" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    ComputerName = `$env:COMPUTERNAME" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    DomainName = `$env:USERDOMAIN" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    OSVersion = (Get-WmiObject -Class Win32_OperatingSystem).Caption" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Architecture = `$env:PROCESSOR_ARCHITECTURE" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    WorkingDirectory = Get-Location" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    ScriptPath = `$MyInvocation.MyCommand.Path" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    ScriptVersion = `"1.0.0`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    BuildDate = `"202412010000`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Environment validation function
-function Test-EnvironmentCompatibility {
-    [CmdletBinding()]
-    param()
-    
-    Write-InitializationLog -Component "Environment" -Status "Starting compatibility validation" -Level "Info"
-    
-    $compatibilityResults = @{
-        PowerShellVersion = $false
-        ExecutionPolicy = $false
-        AdminPrivileges = $false
-        ModulesAvailable = @()
-        Warnings = @()
-        Errors = @()
-    }
-    
-    # PowerShell version check
-    if ($PSVersionTable.PSVersion.Major -ge 5) {
-        $compatibilityResults.PowerShellVersion = $true
-        Write-InitializationLog -Component "PowerShell" -Status "Version compatible" -Details "v$($PSVersionTable.PSVersion)" -Level "Success"
-    } else {
-        Write-InitializationLog -Component "PowerShell" -Status "Version incompatible" -Details "v$($PSVersionTable.PSVersion) - Required: 5.1+" -Level "Error"
-        $compatibilityResults.Errors += "PowerShell version $($PSVersionTable.PSVersion) is below required minimum 5.1"
-    }
-    
-    # Execution policy check
-    $execPolicy = Get-ExecutionPolicy
-    if ($execPolicy -in @("RemoteSigned", "Unrestricted", "Bypass")) {
-        $compatibilityResults.ExecutionPolicy = $true
-        Write-InitializationLog -Component "ExecutionPolicy" -Status "Policy acceptable" -Details $execPolicy -Level "Success"
-    } else {
-        Write-InitializationLog -Component "ExecutionPolicy" -Status "Policy restrictive" -Details $execPolicy -Level "Warning"
-        $compatibilityResults.Warnings += "Execution policy $execPolicy may restrict script execution"
-    }
-    
-    # Admin privileges check
-    $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object System.Security.Principal.WindowsPrincipal($currentUser)
-    if ($principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {
-        $compatibilityResults.AdminPrivileges = $true
-        Write-InitializationLog -Component "Privileges" -Status "Administrator access confirmed" -Level "Success"
-    } else {
-        Write-InitializationLog -Component "Privileges" -Status "Limited privileges detected" -Details "Some operations may fail" -Level "Warning"
-        $compatibilityResults.Warnings += "Script running without administrator privileges"
-    }
-    
-    # Module availability check
-    $requiredModules = @("ActiveDirectory", "GroupPolicy")
-    foreach ($module in $requiredModules) {
-        if (Get-Module -ListAvailable -Name $module) {
-            $compatibilityResults.ModulesAvailable += $module
-            Write-InitializationLog -Component "Module" -Status "Available" -Details $module -Level "Success"
-        } else {
-            Write-InitializationLog -Component "Module" -Status "Missing" -Details $module -Level "Warning"
-            $compatibilityResults.Warnings += "Required module $module not available"
-        }
-    }
-    
-    # Network connectivity check
-    try {
-        $domain = Get-ADDomain -ErrorAction Stop
-        Write-InitializationLog -Component "Network" -Status "Domain connectivity confirmed" -Details $domain.DNSRoot -Level "Success"
-    } catch {
-        Write-InitializationLog -Component "Network" -Status "Domain connectivity failed" -Details $_.Exception.Message -Level "Warning"
-        $compatibilityResults.Warnings += "Unable to connect to Active Directory domain"
-    }
-    
-    # Performance baseline
-    $script:InitializationLog.PerformanceBaseline = @{
-        MemoryUsage = [System.GC]::GetTotalMemory($false)
-        ProcessMemory = (Get-Process -Id $PID).WorkingSet64
-        CPUUsage = (Get-Counter "\Processor(_Total)\% Processor Time").CounterSamples[0].CookedValue
-    }
-    
-    Write-InitializationLog -Component "Environment" -Status "Compatibility validation completed" -Level "Info"
-    
-    return $compatibilityResults
-}
+# Add enhanced initialization logging function
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Enhanced initialization logging function" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "function Write-InitializationLog {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    param(" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$Component," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$Status," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$Details = `"`"," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$Level = `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    )" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$timestamp = Get-Date -Format `"yyyy-MM-dd HH:mm:ss.fff`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$logEntry = `"[`$timestamp] [INIT] [`$Component] `$Status`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    if (`$Details) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$logEntry += `" - `$Details`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Console output with initialization-specific formatting" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$color = switch (`$Level) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Info`" { `"White`" }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Warning`" { `"Yellow`" }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Error`" { `"Red`" }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Success`" { `"Green`" }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Security`" { `"Magenta`" }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        default { `"Cyan`" }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-Host `$logEntry -ForegroundColor `$color" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Store in initialization log for later output" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    if (-not `$script:InitializationLog.ContainsKey(`"LogEntries`")) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$script:InitializationLog.LogEntries = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$script:InitializationLog.LogEntries += @{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Timestamp = `$timestamp" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Component = `$Component" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Status = `$Status" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Details = `$Details" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Level = `$Level" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Initialize comprehensive logging
-Write-InitializationLog -Component "System" -Status "Starting Morohub ADPA initialization" -Level "Info"
-Write-InitializationLog -Component "System" -Status "Script version" -Details $script:InitializationLog.ScriptVersion -Level "Info"
-Write-InitializationLog -Component "System" -Status "Build date" -Details $script:InitializationLog.BuildDate -Level "Info"
-Write-InitializationLog -Component "System" -Status "PowerShell version" -Details $script:InitializationLog.PowerShellVersion -Level "Info"
-Write-InitializationLog -Component "System" -Status "Execution policy" -Details $script:InitializationLog.ExecutionPolicy -Level "Info"
-Write-InitializationLog -Component "System" -Status "Current user" -Details $script:InitializationLog.CurrentUser -Level "Info"
-Write-InitializationLog -Component "System" -Status "Computer name" -Details $script:InitializationLog.ComputerName -Level "Info"
-Write-InitializationLog -Component "System" -Status "OS version" -Details $script:InitializationLog.OSVersion -Level "Info"
-Write-InitializationLog -Component "System" -Status "Architecture" -Details $script:InitializationLog.Architecture -Level "Info"
-Write-InitializationLog -Component "System" -Status "Working directory" -Details $script:InitializationLog.WorkingDirectory -Level "Info"
-Write-InitializationLog -Component "System" -Status "Script path" -Details $script:InitializationLog.ScriptPath -Level "Info"
+# Add environment validation function
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Environment validation function" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "function Test-EnvironmentCompatibility {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    param()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-InitializationLog -Component `"Environment`" -Status `"Starting compatibility validation`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$compatibilityResults = @{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        PowerShellVersion = `$false" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        ExecutionPolicy = `$false" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        AdminPrivileges = `$false" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        ModulesAvailable = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Warnings = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Errors = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # PowerShell version check" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    if (`$PSVersionTable.PSVersion.Major -ge 5) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$compatibilityResults.PowerShellVersion = `$true" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-InitializationLog -Component `"PowerShell`" -Status `"Version compatible`" -Details `"v`$(`$PSVersionTable.PSVersion)`" -Level `"Success`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    } else {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-InitializationLog -Component `"PowerShell`" -Status `"Version incompatible`" -Details `"v`$(`$PSVersionTable.PSVersion) - Required: 5.1+`" -Level `"Error`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$compatibilityResults.Errors += `"PowerShell version `$(`$PSVersionTable.PSVersion) is below required minimum 5.1`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Execution policy check" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$execPolicy = Get-ExecutionPolicy" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    if (`$execPolicy -in @(`"RemoteSigned`", `"Unrestricted`", `"Bypass`")) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$compatibilityResults.ExecutionPolicy = `$true" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-InitializationLog -Component `"ExecutionPolicy`" -Status `"Policy acceptable`" -Details `$execPolicy -Level `"Success`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    } else {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-InitializationLog -Component `"ExecutionPolicy`" -Status `"Policy restrictive`" -Details `$execPolicy -Level `"Warning`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$compatibilityResults.Warnings += `"Execution policy `$execPolicy may restrict script execution`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Admin privileges check" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$principal = New-Object System.Security.Principal.WindowsPrincipal(`$currentUser)" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    if (`$principal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$compatibilityResults.AdminPrivileges = `$true" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-InitializationLog -Component `"Privileges`" -Status `"Administrator access confirmed`" -Level `"Success`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    } else {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-InitializationLog -Component `"Privileges`" -Status `"Limited privileges detected`" -Details `"Some operations may fail`" -Level `"Warning`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$compatibilityResults.Warnings += `"Script running without administrator privileges`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Module availability check" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$requiredModules = @(`"ActiveDirectory`", `"GroupPolicy`")" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    foreach (`$module in `$requiredModules) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        if (Get-Module -ListAvailable -Name `$module) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `$compatibilityResults.ModulesAvailable += `$module" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            Write-InitializationLog -Component `"Module`" -Status `"Available`" -Details `$module -Level `"Success`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        } else {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            Write-InitializationLog -Component `"Module`" -Status `"Missing`" -Details `$module -Level `"Warning`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `$compatibilityResults.Warnings += `"Required module `$module not available`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Network connectivity check" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    try {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$domain = Get-ADDomain -ErrorAction Stop" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-InitializationLog -Component `"Network`" -Status `"Domain connectivity confirmed`" -Details `$domain.DNSRoot -Level `"Success`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    } catch {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-InitializationLog -Component `"Network`" -Status `"Domain connectivity failed`" -Details `$_.Exception.Message -Level `"Warning`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$compatibilityResults.Warnings += `"Unable to connect to Active Directory domain`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Performance baseline" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$script:InitializationLog.PerformanceBaseline = @{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        MemoryUsage = [System.GC]::GetTotalMemory(`$false)" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        ProcessMemory = (Get-Process -Id `$PID).WorkingSet64" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        CPUUsage = (Get-Counter `"\Processor(_Total)\% Processor Time`").CounterSamples[0].CookedValue" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-InitializationLog -Component `"Environment`" -Status `"Compatibility validation completed`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    return `$compatibilityResults" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Run environment compatibility check
-$script:EnvironmentCompatibility = Test-EnvironmentCompatibility
+# Add initialization calls
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Initialize comprehensive logging" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Starting Morohub ADPA initialization`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Script version`" -Details `$script:InitializationLog.ScriptVersion -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Build date`" -Details `$script:InitializationLog.BuildDate -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"PowerShell version`" -Details `$script:InitializationLog.PowerShellVersion -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Execution policy`" -Details `$script:InitializationLog.ExecutionPolicy -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Current user`" -Details `$script:InitializationLog.CurrentUser -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Computer name`" -Details `$script:InitializationLog.ComputerName -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"OS version`" -Details `$script:InitializationLog.OSVersion -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Architecture`" -Details `$script:InitializationLog.Architecture -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Working directory`" -Details `$script:InitializationLog.WorkingDirectory -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Script path`" -Details `$script:InitializationLog.ScriptPath -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Log compatibility results summary
-$successCount = ($script:EnvironmentCompatibility.PowerShellVersion -eq $true) + 
-                ($script:EnvironmentCompatibility.ExecutionPolicy -eq $true) + 
-                ($script:EnvironmentCompatibility.AdminPrivileges -eq $true)
-$totalChecks = 3
+# Add environment compatibility check
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Run environment compatibility check" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:EnvironmentCompatibility = Test-EnvironmentCompatibility" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-Write-InitializationLog -Component "Summary" -Status "Environment compatibility" -Details "$successCount/$totalChecks checks passed" -Level $(if ($successCount -eq $totalChecks) { "Success" } else { "Warning" })
+# Add compatibility results summary
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Log compatibility results summary" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$successCount = (`$script:EnvironmentCompatibility.PowerShellVersion -eq `$true) + " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                (`$script:EnvironmentCompatibility.ExecutionPolicy -eq `$true) + " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                (`$script:EnvironmentCompatibility.AdminPrivileges -eq `$true)" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$totalChecks = 3" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"Summary`" -Status `"Environment compatibility`" -Details `"`$successCount/`$totalChecks checks passed`" -Level `$(if (`$successCount -eq `$totalChecks) { `"Success`" } else { `"Warning`" })" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "if (`$script:EnvironmentCompatibility.Warnings.Count -gt 0) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-InitializationLog -Component `"Summary`" -Status `"Warnings detected`" -Details `"`$(`$script:EnvironmentCompatibility.Warnings.Count) warnings`" -Level `"Warning`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "if (`$script:EnvironmentCompatibility.Errors.Count -gt 0) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-InitializationLog -Component `"Summary`" -Status `"Errors detected`" -Details `"`$(`$script:EnvironmentCompatibility.Errors.Count) errors`" -Level `"Error`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "Write-InitializationLog -Component `"System`" -Status `"Initialization logging system ready`" -Level `"Success`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-if ($script:EnvironmentCompatibility.Warnings.Count -gt 0) {
-    Write-InitializationLog -Component "Summary" -Status "Warnings detected" -Details "$($script:EnvironmentCompatibility.Warnings.Count) warnings" -Level "Warning"
-}
+# Add variable initialization
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Initialize variables" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:OutputDir = `$OutputDirectory" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:LogFile = `"Morohub-ADPA.log`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:SecurityLogFile = `"Morohub-ADPA-Security.log`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:ExecutionMode = `"Standard`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:ChecksToRun = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:DomainInfo = `$null" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:ForestInfo = `$null" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:SecurityFindings = @{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    CompletedChecks = 0" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    FailedChecks = 0" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    SkippedChecks = 0" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    HighRisk = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    MediumRisk = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    LowRisk = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "`$script:PerformanceMetrics = @{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    StartTime = Get-Date" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    CheckTimes = @{}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-if ($script:EnvironmentCompatibility.Errors.Count -gt 0) {
-    Write-InitializationLog -Component "Summary" -Status "Errors detected" -Details "$($script:EnvironmentCompatibility.Errors.Count) errors" -Level "Error"
-}
+# Add execution mode determination
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Determine execution mode" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "if (`$QuickScan) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$script:ExecutionMode = `"QuickScan`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "} elseif (`$FullAssessment) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$script:ExecutionMode = `"FullAssessment`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "} else {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$script:ExecutionMode = `"Standard`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-Write-InitializationLog -Component "System" -Status "Initialization logging system ready" -Level "Success"
+# Add output directory creation
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Create output directory" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "if (-not (Test-Path `$script:OutputDir)) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    New-Item -Path `$script:OutputDir -ItemType Directory -Force | Out-Null" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Initialize variables
-$script:OutputDir = $OutputDirectory
-$script:LogFile = "Morohub-ADPA.log"
-$script:SecurityLogFile = "Morohub-ADPA-Security.log"
-$script:ExecutionMode = "Standard"
-$script:ChecksToRun = @()
-$script:DomainInfo = $null
-$script:ForestInfo = $null
-$script:SecurityFindings = @{
-    CompletedChecks = 0
-    FailedChecks = 0
-    SkippedChecks = 0
-    HighRisk = @()
-    MediumRisk = @()
-    LowRisk = @()
-}
-$script:PerformanceMetrics = @{
-    StartTime = Get-Date
-    CheckTimes = @{}
-}
+# Add enhanced logging function
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Enhanced logging function" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "function Write-MorohubLog {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    param(" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [Parameter(Mandatory=`$true)]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$Message," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [ValidateSet(`"Info`", `"Warning`", `"Error`", `"Security`")]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$Level = `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    )" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$timestamp = Get-Date -Format `"yyyy-MM-dd HH:mm:ss`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$logEntry = `"[`$timestamp] [`$Level] `$Message`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Console output with colors" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    switch (`$Level) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Info`" { Write-Host `$logEntry -ForegroundColor White }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Warning`" { Write-Host `$logEntry -ForegroundColor Yellow }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Error`" { Write-Host `$logEntry -ForegroundColor Red }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Security`" { Write-Host `$logEntry -ForegroundColor Magenta }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # File logging" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Add-Content -Path (Join-Path `$script:OutputDir `$script:LogFile) -Value `$logEntry -Encoding UTF8" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Security-specific logging" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    if (`$Level -eq `"Security`") {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Add-Content -Path (Join-Path `$script:OutputDir `$script:SecurityLogFile) -Value `$logEntry -Encoding UTF8" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Determine execution mode
-if ($QuickScan) {
-    $script:ExecutionMode = "QuickScan"
-} elseif ($FullAssessment) {
-    $script:ExecutionMode = "FullAssessment"
-} else {
-    $script:ExecutionMode = "Standard"
-}
+# Add progress tracking function
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Progress tracking function" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "function Log-MorohubProgress {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    param(" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$CheckID," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$CheckName," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$Status," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$Details = `"`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    )" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$progressMessage = `"`$CheckID - `$CheckName - `$Status`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    if (`$Details) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$progressMessage += `" - `$Details`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-MorohubLog -Message `$progressMessage -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Update metrics" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    switch (`$Status) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Completed`" { `$script:SecurityFindings.CompletedChecks++ }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Failed`" { `$script:SecurityFindings.FailedChecks++ }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `"Skipped`" { `$script:SecurityFindings.SkippedChecks++ }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Create output directory
-if (-not (Test-Path $script:OutputDir)) {
-    New-Item -Path $script:OutputDir -ItemType Directory -Force | Out-Null
-}
+# Add enhanced group membership enumeration
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Enhanced group membership enumeration" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "function Get-GroupMembers {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    param(" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [Parameter(Mandatory=`$true)]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        [string]`$GroupName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    )" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    try {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$group = Get-ADGroup -Identity `$GroupName -Properties Members" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$members = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        foreach (`$member in `$group.Members) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            try {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                `$memberObj = Get-ADObject -Identity `$member -Properties objectClass, sAMAccountName, displayName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                if (`$memberObj.objectClass -eq `"user`") {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    `$members += [PSCustomObject]@{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        Type = `"User`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        SamAccountName = `$memberObj.sAMAccountName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        DisplayName = `$memberObj.displayName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        DistinguishedName = `$memberObj.DistinguishedName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                } elseif (`$memberObj.objectClass -eq `"group`") {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    `$members += [PSCustomObject]@{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        Type = `"Group`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        SamAccountName = `$memberObj.sAMAccountName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        DisplayName = `$memberObj.displayName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        DistinguishedName = `$memberObj.DistinguishedName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    # Recursively get nested group members" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    `$nestedMembers = Get-GroupMembers -GroupName `$memberObj.sAMAccountName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    `$members += `$nestedMembers" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            } catch {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                Write-MorohubLog -Message `"Error processing group member `$member : `$(`$_.Exception.Message)`" -Level `"Warning`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        return `$members" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    } catch {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-MorohubLog -Message `"Error getting group members for `$GroupName : `$(`$_.Exception.Message)`" -Level `"Error`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        return @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Enhanced logging function
-function Write-MorohubLog {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$Message,
-        [ValidateSet("Info", "Warning", "Error", "Security")]
-        [string]$Level = "Info"
-    )
-    
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logEntry = "[$timestamp] [$Level] $Message"
-    
-    # Console output with colors
-    switch ($Level) {
-        "Info" { Write-Host $logEntry -ForegroundColor White }
-        "Warning" { Write-Host $logEntry -ForegroundColor Yellow }
-        "Error" { Write-Host $logEntry -ForegroundColor Red }
-        "Security" { Write-Host $logEntry -ForegroundColor Magenta }
-    }
-    
-    # File logging
-    Add-Content -Path (Join-Path $script:OutputDir $script:LogFile) -Value $logEntry -Encoding UTF8
-    
-    # Security-specific logging
-    if ($Level -eq "Security") {
-        Add-Content -Path (Join-Path $script:OutputDir $script:SecurityLogFile) -Value $logEntry -Encoding UTF8
-    }
-}
+# Add DCSync rights detection
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# DCSync rights detection" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "function Get-DCSyncRights {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    param()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    try {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-MorohubLog -Message `"Checking for DCSync rights...`" -Level `"Security`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$dcSyncRights = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$domain = Get-ADDomain" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$domainSID = `$domain.DomainSID" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        # Check for users with DCSync rights (trusted for delegation)" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$dcSyncUsers = Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl | Where-Object { (`$_.userAccountControl -band 524288) -eq 524288 }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        foreach (`$user in `$dcSyncUsers) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `$dcSyncRights += [PSCustomObject]@{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                ObjectType = `"User`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                SamAccountName = `$user.sAMAccountName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                DisplayName = `$user.displayName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                RiskLevel = `"Critical`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                Description = `"User has DCSync rights (Replicating Directory Changes)`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                Recommendation = `"Review and remove if not required for legitimate replication`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        # Check for groups with DCSync rights (Global Security Groups)" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$dcSyncGroups = Get-ADGroup -Filter * -Properties sAMAccountName, displayName, groupType | Where-Object { (`$_.groupType -band 2147483648) -eq 2147483648 }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        foreach (`$group in `$dcSyncGroups) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `$dcSyncRights += [PSCustomObject]@{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                ObjectType = `"Group`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                SamAccountName = `$group.sAMAccountName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                DisplayName = `$group.displayName" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                RiskLevel = `"Critical`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                Description = `"Group has DCSync rights (Replicating Directory Changes)`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                Recommendation = `"Review and remove if not required for legitimate replication`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        # Export findings to CSV for analyst review" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        if (`$dcSyncRights.Count -gt 0) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `$dcSyncCSVPath = Join-Path `$script:OutputDir `"S127-DCSync-Rights-Detection.csv`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `$dcSyncRights | Export-Csv -Path `$dcSyncCSVPath -NoTypeInformation -Encoding UTF8" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            Write-MorohubLog -Message `"DCSync findings exported to: `$dcSyncCSVPath`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-MorohubLog -Message `"DCSync rights check completed. Found `$(`$dcSyncRights.Count) objects with DCSync rights.`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        return `$dcSyncRights" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    } catch {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-MorohubLog -Message `"Error checking DCSync rights: `$(`$_.Exception.Message)`" -Level `"Error`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        return @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Progress tracking function
-function Log-MorohubProgress {
-    [CmdletBinding()]
-    param(
-        [string]$CheckID,
-        [string]$CheckName,
-        [string]$Status,
-        [string]$Details = ""
-    )
-    
-    $progressMessage = "$CheckID - $CheckName - $Status"
-    if ($Details) {
-        $progressMessage += " - $Details"
-    }
-    
-    Write-MorohubLog -Message $progressMessage -Level "Info"
-    
-    # Update metrics
-    switch ($Status) {
-        "Completed" { $script:SecurityFindings.CompletedChecks++ }
-        "Failed" { $script:SecurityFindings.FailedChecks++ }
-        "Skipped" { $script:SecurityFindings.SkippedChecks++ }
-    }
-}
+# Add dangerous ACL detection
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Dangerous ACL detection" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "function Get-DangerousACLs {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    [CmdletBinding()]" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    param()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    try {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-MorohubLog -Message `"Checking for dangerous ACLs...`" -Level `"Security`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$dangerousACLs = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$domain = Get-ADDomain" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        # Check for GenericAll permissions on critical objects" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$criticalObjects = @(" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `"CN=Domain Controllers,`$(`$domain.DistinguishedName)`"," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `"CN=Users,`$(`$domain.DistinguishedName)`"," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `"CN=Computers,`$(`$domain.DistinguishedName)`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        )" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        foreach (`$objectDN in `$criticalObjects) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            try {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                `$acl = Get-Acl -Path `"AD:`$objectDN`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                foreach (`$access in `$acl.Access) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    if (`$access.AccessControlType -eq `"Allow`" -and " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        (`$access.ActiveDirectoryRights -like `"*GenericAll*`" -or" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                         `$access.ActiveDirectoryRights -like `"*WriteDACL*`" -or" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                         `$access.ActiveDirectoryRights -like `"*WriteOwner*`")) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        `$dangerousACLs += [PSCustomObject]@{" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                            ObjectDN = `$objectDN" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                            Principal = `$access.IdentityReference.Value" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                            Rights = `$access.ActiveDirectoryRights.ToString()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                            RiskLevel = `"High`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                            Description = `"Dangerous permissions on critical AD object`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                            Recommendation = `"Review and restrict permissions to minimum required`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                        }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            } catch {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                Write-MorohubLog -Message `"Error checking ACLs for `$objectDN : `$(`$_.Exception.Message)`" -Level `"Warning`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        # Export findings to CSV for analyst review" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        if (`$dangerousACLs.Count -gt 0) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `$dangerousACLsCSVPath = Join-Path `$script:OutputDir `"S128-Dangerous-ACLs-Detection.csv`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `$dangerousACLs | Export-Csv -Path `$dangerousACLsCSVPath -NoTypeInformation -Encoding UTF8" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            Write-MorohubLog -Message `"Dangerous ACL findings exported to: `$dangerousACLsCSVPath`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-MorohubLog -Message `"Dangerous ACL check completed. Found `$(`$dangerousACLs.Count) dangerous permissions.`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        return `$dangerousACLs" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    } catch {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        Write-MorohubLog -Message `"Error checking dangerous ACLs: `$(`$_.Exception.Message)`" -Level `"Error`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        return @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 
-# Enhanced group membership enumeration
-function Get-GroupMembers {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$GroupName
-    )
-    
-    try {
-        $group = Get-ADGroup -Identity $GroupName -Properties Members
-        $members = @()
-        
-        foreach ($member in $group.Members) {
-            try {
-                $memberObj = Get-ADObject -Identity $member -Properties objectClass, sAMAccountName, displayName
-                
-                if ($memberObj.objectClass -eq "user") {
-                    $members += [PSCustomObject]@{
-                        Type = "User"
-                        SamAccountName = $memberObj.sAMAccountName
-                        DisplayName = $memberObj.displayName
-                        DistinguishedName = $memberObj.DistinguishedName
-                    }
-                } elseif ($memberObj.objectClass -eq "group") {
-                    $members += [PSCustomObject]@{
-                        Type = "Group"
-                        SamAccountName = $memberObj.sAMAccountName
-                        DisplayName = $memberObj.displayName
-                        DistinguishedName = $memberObj.DistinguishedName
-                    }
-                    
-                    # Recursively get nested group members
-                    $nestedMembers = Get-GroupMembers -GroupName $memberObj.sAMAccountName
-                    $members += $nestedMembers
-                }
-            } catch {
-                Write-MorohubLog -Message "Error processing group member $member : $($_.Exception.Message)" -Level "Warning"
-            }
-        }
-        
-        return $members
-    } catch {
-        Write-MorohubLog -Message "Error getting group members for $GroupName : $($_.Exception.Message)" -Level "Error"
-        return @()
-    }
-}
+# Add main script execution
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Main script execution" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "try {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-MorohubLog -Message `"Starting Morohub ADPA assessment`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    # Run basic security checks" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$dcSyncResults = Get-DCSyncRights" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    `$dangerousACLResults = Get-DangerousACLs" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-MorohubLog -Message `"Assessment completed successfully`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "} catch {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-MorohubLog -Message `"Critical error during assessment: `$(`$_.Exception.Message)`" -Level `"Error`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "    Write-Host `"Critical error occurred during assessment. Check error logs for details.`" -ForegroundColor Red" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "}" -Encoding UTF8
 
-# DCSync rights detection
-function Get-DCSyncRights {
-    [CmdletBinding()]
-    param()
-    
-    try {
-        Write-MorohubLog -Message "Checking for DCSync rights..." -Level "Security"
-        
-        $dcSyncRights = @()
-        $domain = Get-ADDomain
-        $domainSID = $domain.DomainSID
-        
-        # Check for users with DCSync rights (trusted for delegation)
-        $dcSyncUsers = Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl | Where-Object { ($_.userAccountControl -band 524288) -eq 524288 }
-        
-        foreach ($user in $dcSyncUsers) {
-            $dcSyncRights += [PSCustomObject]@{
-                ObjectType = "User"
-                SamAccountName = $user.sAMAccountName
-                DisplayName = $user.displayName
-                RiskLevel = "Critical"
-                Description = "User has DCSync rights (Replicating Directory Changes)"
-                Recommendation = "Review and remove if not required for legitimate replication"
-            }
-        }
-        
-        # Check for groups with DCSync rights (Global Security Groups)
-        $dcSyncGroups = Get-ADGroup -Filter * -Properties sAMAccountName, displayName, groupType | Where-Object { ($_.groupType -band 2147483648) -eq 2147483648 }
-        
-        foreach ($group in $dcSyncGroups) {
-            $dcSyncRights += [PSCustomObject]@{
-                ObjectType = "Group"
-                SamAccountName = $group.sAMAccountName
-                DisplayName = $group.displayName
-                RiskLevel = "Critical"
-                Description = "Group has DCSync rights (Replicating Directory Changes)"
-                Recommendation = "Review and remove if not required for legitimate replication"
-            }
-        }
-        
-        # Export findings to CSV for analyst review
-        if ($dcSyncRights.Count -gt 0) {
-            $dcSyncCSVPath = Join-Path $script:OutputDir "S127-DCSync-Rights-Detection.csv"
-            $dcSyncRights | Export-Csv -Path $dcSyncCSVPath -NoTypeInformation -Encoding UTF8
-            Write-MorohubLog -Message "DCSync findings exported to: $dcSyncCSVPath" -Level "Info"
-        }
-        
-        Write-MorohubLog -Message "DCSync rights check completed. Found $($dcSyncRights.Count) objects with DCSync rights." -Level "Info"
-        return $dcSyncRights
-        
-    } catch {
-        Write-MorohubLog -Message "Error checking DCSync rights: $($_.Exception.Message)" -Level "Error"
-        return @()
-    }
-}
-
-# Dangerous ACL detection
-function Get-DangerousACLs {
-    [CmdletBinding()]
-    param()
-    
-    try {
-        Write-MorohubLog -Message "Checking for dangerous ACLs..." -Level "Security"
-        
-        $dangerousACLs = @()
-        $domain = Get-ADDomain
-        
-        # Check for GenericAll permissions on critical objects
-        $criticalObjects = @(
-            "CN=Domain Controllers,$($domain.DistinguishedName)",
-            "CN=Users,$($domain.DistinguishedName)",
-            "CN=Computers,$($domain.DistinguishedName)"
-        )
-        
-        foreach ($objectDN in $criticalObjects) {
-            try {
-                $acl = Get-Acl -Path "AD:$objectDN"
-                
-                foreach ($access in $acl.Access) {
-                    if ($access.AccessControlType -eq "Allow" -and 
-                        ($access.ActiveDirectoryRights -like "*GenericAll*" -or
-                         $access.ActiveDirectoryRights -like "*WriteDACL*" -or
-                         $access.ActiveDirectoryRights -like "*WriteOwner*")) {
-                        
-                        $dangerousACLs += [PSCustomObject]@{
-                            ObjectDN = $objectDN
-                            Principal = $access.IdentityReference.Value
-                            Rights = $access.ActiveDirectoryRights.ToString()
-                            RiskLevel = "High"
-                            Description = "Dangerous permissions on critical AD object"
-                            Recommendation = "Review and restrict permissions to minimum required"
-                        }
-                    }
-                }
-            } catch {
-                Write-MorohubLog -Message "Error checking ACLs for $objectDN : $($_.Exception.Message)" -Level "Warning"
-            }
-        }
-        
-        # Export findings to CSV for analyst review
-        if ($dangerousACLs.Count -gt 0) {
-            $dangerousACLsCSVPath = Join-Path $script:OutputDir "S128-Dangerous-ACLs-Detection.csv"
-            $dangerousACLs | Export-Csv -Path $dangerousACLsCSVPath -NoTypeInformation -Encoding UTF8
-            Write-MorohubLog -Message "Dangerous ACL findings exported to: $dangerousACLsCSVPath" -Level "Info"
-        }
-        
-        Write-MorohubLog -Message "Dangerous ACL check completed. Found $($dangerousACLs.Count) dangerous permissions." -Level "Info"
-        return $dangerousACLs
-        
-    } catch {
-        Write-MorohubLog -Message "Error checking dangerous ACLs: $($_.Exception.Message)" -Level "Error"
-        return @()
-    }
-}
-
-# Risk scoring function
-function Calculate-RiskScore {
-    [CmdletBinding()]
-    param(
-        [Parameter(Mandatory=$true)]
-        [string]$RiskLevel,
-        [int]$Severity = 1,
-        [int]$Impact = 1
-    )
-    
-    $baseScore = switch ($RiskLevel) {
-        "Critical" { 10 }
-        "High" { 8 }
-        "Medium" { 5 }
-        "Low" { 2 }
-        default { 1 }
-    }
-    
-    $finalScore = $baseScore * $Severity * $Impact
-    return [math]::Min($finalScore, 100) # Cap at 100
-}
-
-# Kerberos vulnerabilities detection
-function Get-KerberosVulnerabilities {
-    [CmdletBinding()]
-    param()
-    
-    try {
-        Write-MorohubLog -Message "Checking for Kerberos vulnerabilities..." -Level "Security"
-        
-        $kerberosVulns = @()
-        
-        # Check for AS-REP Roasting (users with pre-authentication disabled)
-        $asRepUsers = Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl | Where-Object { ($_.userAccountControl -band 4194304) -eq 4194304 -and ($_.userAccountControl -band 2) -eq 0 }
-        
-        foreach ($user in $asRepUsers) {
-            $kerberosVulns += [PSCustomObject]@{
-                VulnerabilityType = "AS-REP Roasting"
-                SamAccountName = $user.sAMAccountName
-                DisplayName = $user.displayName
-                RiskLevel = "High"
-                Description = "User has pre-authentication disabled (vulnerable to AS-REP roasting)"
-                Recommendation = "Enable pre-authentication for all user accounts"
-            }
-        }
-        
-        # Check for unconstrained delegation
-        $unconstrainedDelegation = Get-ADComputer -Filter * -Properties sAMAccountName, displayName, userAccountControl | Where-Object { ($_.userAccountControl -band 524288) -eq 524288 }
-        
-        foreach ($computer in $unconstrainedDelegation) {
-            $kerberosVulns += [PSCustomObject]@{
-                VulnerabilityType = "Unconstrained Delegation"
-                SamAccountName = $computer.sAMAccountName
-                DisplayName = $computer.displayName
-                RiskLevel = "High"
-                Description = "Computer account has unconstrained delegation enabled"
-                Recommendation = "Disable unconstrained delegation or configure constrained delegation"
-            }
-        }
-        
-        # Check for constrained delegation
-        $constrainedDelegation = Get-ADUser -Filter * -Properties sAMAccountName, displayName, "msDS-AllowedToDelegateTo" | Where-Object { $_.'msDS-AllowedToDelegateTo' -ne $null -and $_.'msDS-AllowedToDelegateTo'.Count -gt 0 }
-        
-        foreach ($user in $constrainedDelegation) {
-            $kerberosVulns += [PSCustomObject]@{
-                VulnerabilityType = "Constrained Delegation"
-                SamAccountName = $user.sAMAccountName
-                DisplayName = $user.displayName
-                RiskLevel = "Medium"
-                Description = "User has constrained delegation configured"
-                Recommendation = "Review delegation settings and restrict to minimum required services"
-            }
-        }
-        
-        # Export findings to CSV for analyst review
-        if ($kerberosVulns.Count -gt 0) {
-            $kerberosCSVPath = Join-Path $script:OutputDir "S129-Kerberos-Vulnerabilities.csv"
-            $kerberosVulns | Export-Csv -Path $kerberosCSVPath -NoTypeInformation -Encoding UTF8
-            Write-MorohubLog -Message "Kerberos vulnerability findings exported to: $kerberosCSVPath" -Level "Info"
-        }
-        
-        Write-MorohubLog -Message "Kerberos vulnerabilities check completed. Found $($kerberosVulns.Count) vulnerabilities." -Level "Info"
-        return $kerberosVulns
-        
-    } catch {
-        Write-MorohubLog -Message "Error checking Kerberos vulnerabilities: $($_.Exception.Message)" -Level "Error"
-        return @()
-    }
-}
-
-# SID History abuse detection
-function Get-SIDHistoryAbuse {
-    [CmdletBinding()]
-    param()
-    
-    try {
-        Write-MorohubLog -Message "Checking for SID History abuse..." -Level "Security"
-        
-        $sidHistoryAbuse = @()
-        
-        # Check for users with SID History
-        $usersWithSidHistory = Get-ADUser -Filter * -Properties sAMAccountName, displayName, sIDHistory | Where-Object { $_.sIDHistory -ne $null -and $_.sIDHistory.Count -gt 0 }
-        
-        foreach ($user in $usersWithSidHistory) {
-            $sidHistoryAbuse += [PSCustomObject]@{
-                ObjectType = "User"
-                SamAccountName = $user.sAMAccountName
-                DisplayName = $user.displayName
-                SIDHistoryCount = $user.sIDHistory.Count
-                RiskLevel = "Medium"
-                Description = "User has SID History configured (potential for privilege escalation)"
-                Recommendation = "Review SID History and remove if not required for migration"
-            }
-        }
-        
-        # Check for groups with SID History
-        $groupsWithSidHistory = Get-ADGroup -Filter * -Properties sAMAccountName, displayName, sIDHistory | Where-Object { $_.sIDHistory -ne $null -and $_.sIDHistory.Count -gt 0 }
-        
-        foreach ($group in $groupsWithSidHistory) {
-            $sidHistoryAbuse += [PSCustomObject]@{
-                ObjectType = "Group"
-                SamAccountName = $group.sAMAccountName
-                DisplayName = $group.displayName
-                SIDHistoryCount = $group.sIDHistory.Count
-                RiskLevel = "Medium"
-                Description = "Group has SID History configured (potential for privilege escalation)"
-                Recommendation = "Review SID History and remove if not required for migration"
-            }
-        }
-        
-        # Export findings to CSV for analyst review
-        if ($sidHistoryAbuse.Count -gt 0) {
-            $sidHistoryCSVPath = Join-Path $script:OutputDir "S130-SIDHistory-Abuse-Detection.csv"
-            $sidHistoryAbuse | Export-Csv -Path $sidHistoryCSVPath -NoTypeInformation -Encoding UTF8
-            Write-MorohubLog -Message "SID History abuse findings exported to: $sidHistoryCSVPath" -Level "Info"
-        }
-        
-        Write-MorohubLog -Message "SID History abuse check completed. Found $($sidHistoryAbuse.Count) objects with SID History." -Level "Info"
-        return $sidHistoryAbuse
-        
-    } catch {
-        Write-MorohubLog -Message "Error checking SID History abuse: $($_.Exception.Message)" -Level "Error"
-        return @()
-    }
-}
-
-# Service account security analysis
-function Get-ServiceAccountSecurity {
-    [CmdletBinding()]
-    param()
-    
-    try {
-        Write-MorohubLog -Message "Analyzing service account security..." -Level "Security"
-        
-        $serviceAccountIssues = @()
-        
-        # Check for service accounts with password never expires
-        $neverExpireAccounts = Get-ADUser -Filter * -Properties sAMAccountName, displayName, servicePrincipalName, userAccountControl | Where-Object { $_.servicePrincipalName -ne $null -and ($_.userAccountControl -band 65536) -eq 65536 }
-        
-        foreach ($account in $neverExpireAccounts) {
-            $serviceAccountIssues += [PSCustomObject]@{
-                IssueType = "Password Never Expires"
-                SamAccountName = $account.sAMAccountName
-                DisplayName = $account.displayName
-                SPNs = ($account.servicePrincipalName -join "; ")
-                RiskLevel = "Medium"
-                Description = "Service account has password that never expires"
-                Recommendation = "Configure password expiration for service accounts"
-            }
-        }
-        
-        # Check for service accounts with weak password policies
-        $weakPasswordAccounts = Get-ADUser -Filter * -Properties sAMAccountName, displayName, servicePrincipalName, userAccountControl | Where-Object { $_.servicePrincipalName -ne $null -and ($_.userAccountControl -band 32) -eq 0 }
-        
-        foreach ($account in $weakPasswordAccounts) {
-            $serviceAccountIssues += [PSCustomObject]@{
-                IssueType = "Weak Password Policy"
-                SamAccountName = $account.sAMAccountName
-                DisplayName = $account.displayName
-                SPNs = ($account.servicePrincipalName -join "; ")
-                RiskLevel = "Low"
-                Description = "Service account not subject to password complexity requirements"
-                Recommendation = "Enable password complexity requirements for service accounts"
-            }
-        }
-        
-        # Export findings to CSV for analyst review
-        if ($serviceAccountIssues.Count -gt 0) {
-            $serviceAccountCSVPath = Join-Path $script:OutputDir "S131-Service-Account-Security.csv"
-            $serviceAccountIssues | Export-Csv -Path $serviceAccountCSVPath -NoTypeInformation -Encoding UTF8
-            Write-MorohubLog -Message "Service account security findings exported to: $serviceAccountCSVPath" -Level "Info"
-        }
-        
-        Write-MorohubLog -Message "Service account security analysis completed. Found $($serviceAccountIssues.Count) issues." -Level "Info"
-        return $serviceAccountIssues
-        
-    } catch {
-        Write-MorohubLog -Message "Error analyzing service account security: $($_.Exception.Message)" -Level "Error"
-        return @()
-    }
-}
-
-# Main script execution
-try {
-    Write-MorohubLog -Message "Starting Morohub ADPA assessment" -Level "Info"
-    
-    # Run basic security checks
-    $dcSyncResults = Get-DCSyncRights
-    $dangerousACLResults = Get-DangerousACLs
-    $kerberosResults = Get-KerberosVulnerabilities
-    $sidHistoryResults = Get-SIDHistoryAbuse
-    $serviceAccountResults = Get-ServiceAccountSecurity
-    
-    Write-MorohubLog -Message "Assessment completed successfully" -Level "Info"
-    
-} catch {
-    Write-MorohubLog -Message "Critical error during assessment: $($_.Exception.Message)" -Level "Error"
-    Write-Host "Critical error occurred during assessment. Check error logs for details." -ForegroundColor Red
-}
-'@
-
-Set-Content -Path "Morohub-ADPA.ps1" -Value $scriptContent -Encoding UTF8
+# Verify the file was created successfully
+Write-Host "Morohub-ADPA.ps1 file created successfully!" -ForegroundColor Green
+Write-Host "File size: $((Get-Item 'Morohub-ADPA.ps1').Length) bytes" -ForegroundColor Cyan
+Write-Host "You can now run the script with: .\Morohub-ADPA.ps1 -QuickScan" -ForegroundColor Yellow
