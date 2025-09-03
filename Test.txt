@@ -1,7 +1,10 @@
-New-Item -Path "Morohub-ADPA.ps1" -ItemType File -Force
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Morohub Active Directory Posture Assessment & Remediation Tool" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Version: 1.0.0" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Build: 202412010000" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "# Author: Lokesh Singh" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Description: Comprehensive AD security assessment and attack path detection tool" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "# Requirements: PowerShell 5.1+, ActiveDirectory, GroupPolicy modules" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "<#" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value ".SYNOPSIS" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "    Morohub Active Directory Posture Assessment & Remediation Tool" -Encoding UTF8
@@ -466,11 +469,26 @@ Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$dangerousACLs = @()" -Enc
 Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$domain = Get-ADDomain" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "        # Check for GenericAll permissions on critical objects" -Encoding UTF8
-Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$criticalObjects = @(" -Encoding UTF8
-Add-Content -Path "Morohub-ADPA.ps1" -Value "            `"CN=Domain Controllers,`$(`$domain.DistinguishedName)`"," -Encoding UTF8
-Add-Content -Path "Morohub-ADPA.ps1" -Value "            `"CN=Users,`$(`$domain.DistinguishedName)`"," -Encoding UTF8
-Add-Content -Path "Morohub-ADPA.ps1" -Value "            `"CN=Computers,`$(`$domain.DistinguishedName)`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$criticalObjects = @()" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        # Dynamically check which containers exist before adding them" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        `$possibleContainers = @(" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `"CN=Domain Controllers`"," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `"CN=Users`"," -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `"CN=Computers`"" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "        )" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        foreach (`$container in `$possibleContainers) {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            `$objectDN = `"`$container,`$(`$domain.DistinguishedName)`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            try {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                # Test if the object exists before adding to critical objects" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                `$testObject = Get-ADObject -Identity `$objectDN -ErrorAction Stop" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                `$criticalObjects += `$objectDN" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                Write-MorohubLog -Message `"Found container: `$objectDN`" -Level `"Info`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            } catch {" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "                Write-MorohubLog -Message `"Container not found: `$objectDN - Skipping ACL check`" -Level `"Warning`"" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "            }" -Encoding UTF8
+Add-Content -Path "Morohub-ADPA.ps1" -Value "        }" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "        " -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "        foreach (`$objectDN in `$criticalObjects) {" -Encoding UTF8
 Add-Content -Path "Morohub-ADPA.ps1" -Value "            try {" -Encoding UTF8
