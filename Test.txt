@@ -1,0 +1,119 @@
+ENVIRONMENT INFORMATION & DISCOVERY
+
+Get-ADDomain
+Get-ADForest
+Get-ADTrust -Filter *
+Get-ExecutionPolicy
+$PSVersionTable.PSVersion
+[System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+Get-WmiObject -Class Win32_OperatingSystem
+
+
+ATTACK PATH DETECTION - CRITICAL SECURITY CHECKS
+
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl | Where-Object { ($_.userAccountControl -band 524288) -eq 524288 }
+Get-ADGroup -Filter * -Properties sAMAccountName, displayName, groupType | Where-Object { ($_.groupType -band 2147483648) -eq 2147483648 }
+$domain = Get-ADDomain
+$criticalObjects = @("CN=Domain Controllers,$($domain.DistinguishedName)", "CN=Users,$($domain.DistinguishedName)", "CN=Computers,$($domain.DistinguishedName)")
+foreach ($objectDN in $criticalObjects) { $acl = Get-Acl -Path "AD:$objectDN"; $acl.Access | Where-Object { $_.AccessControlType -eq "Allow" -and ($_.ActiveDirectoryRights -like "*GenericAll*" -or $_.ActiveDirectoryRights -like "*WriteDACL*" -or $_.ActiveDirectoryRights -like "*WriteOwner*") } | Select-Object IdentityReference, ActiveDirectoryRights, @{Name="ObjectDN";Expression={$objectDN}} }
+
+
+KERBEROS VULNERABILITIES
+
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl | Where-Object { ($_.userAccountControl -band 4194304) -eq 4194304 -and ($_.userAccountControl -band 2) -eq 0 }
+Get-ADComputer -Filter * -Properties sAMAccountName, displayName, userAccountControl | Where-Object { ($_.userAccountControl -band 524288) -eq 524288 }
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, "msDS-AllowedToDelegateTo" | Where-Object { $_.'msDS-AllowedToDelegateTo' -ne $null -and $_.'msDS-AllowedToDelegateTo'.Count -gt 0 }
+Get-ADUser -Filter * -Properties servicePrincipalName | Where-Object { $_.servicePrincipalName -ne $null }
+
+
+SID HISTORY ABUSE DETECTION
+
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, sIDHistory | Where-Object { $_.sIDHistory -ne $null -and $_.sIDHistory.Count -gt 0 }
+Get-ADGroup -Filter * -Properties sAMAccountName, displayName, sIDHistory | Where-Object { $_.sIDHistory -ne $null -and $_.sIDHistory.Count -gt 0 }
+
+
+SERVICE ACCOUNT SECURITY
+
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, servicePrincipalName, userAccountControl | Where-Object { $_.servicePrincipalName -ne $null -and ($_.userAccountControl -band 65536) -eq 65536 }
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, servicePrincipalName, userAccountControl | Where-Object { $_.servicePrincipalName -ne $null -and ($_.userAccountControl -band 32) -eq 0 }
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, servicePrincipalName, enabled, pwdLastSet, lastLogonDate | Where-Object { $_.servicePrincipalName -ne $null }
+
+
+PASSWORD POLICY ANALYSIS
+
+Get-ADDefaultDomainPasswordPolicy
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl, enabled, lastLogonDate | Where-Object { ($_.userAccountControl -band 32) -eq 32 }
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl, enabled, lastLogonDate, pwdLastSet | Where-Object { ($_.userAccountControl -band 65536) -eq 65536 }
+Get-ADUser -Filter "pwdLastSet -gt $((Get-Date).AddDays(-7).ToFileTime())" -Properties sAMAccountName, displayName, pwdLastSet, enabled
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, pwdLastSet, enabled | Where-Object { $_.pwdLastSet -lt (Get-Date).AddDays(-90).ToFileTime() -and $_.enabled -eq $true }
+
+
+PRIVILEGED GROUP ANALYSIS
+
+Get-ADGroupMember -Identity "Domain Admins" -Recursive | Get-ADObject -Properties sAMAccountName, displayName, objectClass, whenCreated
+Get-ADGroupMember -Identity "Enterprise Admins" -Recursive | Get-ADObject -Properties sAMAccountName, displayName, objectClass, whenCreated
+Get-ADGroupMember -Identity "Schema Admins" -Recursive | Get-ADObject -Properties sAMAccountName, displayName, objectClass, whenCreated
+Get-ADGroupMember -Identity "Account Operators" -Recursive | Get-ADObject -Properties sAMAccountName, displayName, objectClass, whenCreated
+Get-ADGroupMember -Identity "Server Operators" -Recursive | Get-ADObject -Properties sAMAccountName, displayName, objectClass, whenCreated
+Get-ADGroupMember -Identity "Backup Operators" -Recursive | Get-ADObject -Properties sAMAccountName, displayName, objectClass, whenCreated
+Get-ADGroupMember -Identity "Print Operators" -Recursive | Get-ADObject -Properties sAMAccountName, displayName, objectClass, whenCreated
+$privilegedGroups = @("Domain Admins", "Enterprise Admins", "Schema Admins", "Account Operators", "Server Operators", "Backup Operators", "Print Operators"); foreach ($group in $privilegedGroups) { try { $members = Get-ADGroupMember -Identity $group -ErrorAction SilentlyContinue; Write-Host "$group : $($members.Count) members" } catch { Write-Host "$group : Error accessing group" } }
+
+
+SUSPICIOUS PATTERNS & BEHAVIORAL ANALYSIS
+
+Get-ADUser -Filter "whenCreated -gt '$((Get-Date).AddDays(-30).ToString('yyyyMMddHHmmss.0Z'))'" -Properties sAMAccountName, displayName, whenCreated, userAccountControl
+Get-ADObject -Filter "whenChanged -gt '$((Get-Date).AddDays(-7).ToString('yyyyMMddHHmmss.0Z'))'" -Properties sAMAccountName, displayName, whenChanged, objectClass
+$suspiciousPatterns = @("admin*", "*test*", "*temp*", "*backup*", "*service*", "*svc*"); foreach ($pattern in $suspiciousPatterns) { Get-ADUser -Filter "sAMAccountName -like '$pattern'" -Properties sAMAccountName, displayName, userAccountControl, whenCreated }
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, enabled, whenChanged | Where-Object { $_.enabled -eq $false }
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl, lockoutTime | Where-Object { $_.userAccountControl -band 0x800000 }
+
+
+DELEGATION & TRUST ANALYSIS
+
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl, enabled, lastLogonDate, servicePrincipalNames, memberOf | Where-Object { ($_.userAccountControl -band 524288) -eq 524288 }
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, "msDS-AllowedToDelegateTo", enabled, lastLogonDate, memberOf | Where-Object { $_.'msDS-AllowedToDelegateTo' -ne $null -and $_.'msDS-AllowedToDelegateTo'.Count -gt 0 }
+Get-ADUser -Filter "sAMAccountName -eq 'Administrator' -or displayName -like '*Local Admin*'" -Properties sAMAccountName, displayName, userAccountControl, enabled, lastLogonDate, memberOf
+
+
+CRITICAL ACCOUNT ANALYSIS
+
+Get-ADUser -Identity "krbtgt" -Properties sAMAccountName, displayName, userAccountControl, pwdLastSet, enabled, description
+Get-ADUser -Filter "SID -like '*-500'" -Properties sAMAccountName, displayName, userAccountControl, enabled, lastLogonDate, pwdLastSet
+Get-ADUser -Filter "SID -like '*-501'" -Properties sAMAccountName, displayName, userAccountControl, enabled
+
+
+GROUP POLICY ANALYSIS
+
+Get-GPO -All | Select-Object DisplayName, GpoStatus, CreationTime, ModificationTime
+Get-ADObject -Filter "objectClass -eq 'domainDNS'" | ForEach-Object { Get-GPInheritance -Target $_.DistinguishedName }
+
+
+SECURITY STATISTICS & SUMMARY
+
+(Get-ADUser -Filter *).Count
+(Get-ADUser -Filter * | Where-Object { $_.Enabled -eq $true }).Count
+(Get-ADUser -Filter * -Properties servicePrincipalName | Where-Object { $_.servicePrincipalName -ne $null }).Count
+(Get-ADUser -Filter "lastLogonDate -lt '$((Get-Date).AddDays(-90).ToString('yyyy-MM-dd'))'" -ErrorAction SilentlyContinue).Count
+(Get-ADComputer -Filter *).Count
+
+
+EXPORT COMMANDS FOR REPORTING
+
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl | Where-Object { ($_.userAccountControl -band 524288) -eq 524288 } | Export-Csv -Path "DCSync-Rights.csv" -NoTypeInformation
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl | Where-Object { ($_.userAccountControl -band 4194304) -eq 4194304 -and ($_.userAccountControl -band 2) -eq 0 } | Export-Csv -Path "AS-REP-Roasting.csv" -NoTypeInformation
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, servicePrincipalName, userAccountControl, enabled, pwdLastSet | Where-Object { $_.servicePrincipalName -ne $null } | Export-Csv -Path "Service-Accounts.csv" -NoTypeInformation
+Get-ADGroupMember -Identity "Domain Admins" -Recursive | Get-ADObject -Properties sAMAccountName, displayName, objectClass, whenCreated | Export-Csv -Path "Domain-Admins.csv" -NoTypeInformation
+
+
+ADVANCED QUERIES
+
+Get-ADUser -Filter * -Properties sAMAccountName, displayName, userAccountControl, servicePrincipalName, sIDHistory, enabled | Where-Object { (($_.userAccountControl -band 524288) -eq 524288) -or (($_.userAccountControl -band 4194304) -eq 4194304 -and ($_.userAccountControl -band 2) -eq 0) -or (($_.userAccountControl -band 65536) -eq 65536 -and $_.servicePrincipalName -ne $null) -or ($_.sIDHistory -ne $null -and $_.sIDHistory.Count -gt 0) }
+$domainAdmins = Get-ADGroupMember -Identity "Domain Admins" -Recursive; $domainAdmins | ForEach-Object { $user = Get-ADUser -Identity $_.SID -Properties userAccountControl -ErrorAction SilentlyContinue; if ($user -and (($user.userAccountControl -band 524288) -eq 524288)) { Write-Host "CRITICAL: Domain Admin $($user.sAMAccountName) has delegation rights!" } }
+
+
+REMEDIATION VERIFICATION COMMANDS
+
+Get-ADUser -Filter * -Properties userAccountControl | Where-Object { ($_.userAccountControl -band 524288) -eq 524288 }
+Get-ADUser -Filter * -Properties servicePrincipalName, userAccountControl | Where-Object { $_.servicePrincipalName -ne $null -and ($_.userAccountControl -band 65536) -eq 65536 }
+Get-ADUser -Filter * -Properties userAccountControl | Where-Object { ($_.userAccountControl -band 4194304) -eq 4194304 -and ($_.userAccountControl -band 2) -eq 0 }
